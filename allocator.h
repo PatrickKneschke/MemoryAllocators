@@ -16,16 +16,18 @@ class IAllocator {
 
 public:
 
+    IAllocator() = delete;
+
     /* @brief Constructor that allocates the managed memory portion.
      *
-     * @param totalSize    The size of the allocated memory in bytes.
+     * @param totalMemory    The size of the allocated memory in bytes.
      */
-    IAllocator(const size_t totalSize) : 
-        mTotalSize {totalSize}, 
-        mUsed {0}, 
-        mMaxUsed {0} 
+    IAllocator(const size_t totalMemory) : 
+        mTotalMemory {totalMemory}, 
+        mUsedMemory {0}, 
+        mMaxUsedMemory {0} 
     { 
-        pBase = std::malloc(mTotalSize);
+        pBase = std::malloc(mTotalMemory);
     }
 
     /* @brief Default destructor that frees the allocated memory.
@@ -35,7 +37,7 @@ public:
         std::free(pBase);
     }
 
-    virtual void* Allocate(const size_t size, const size_t align = 0) = 0;
+    virtual void* Allocate(const size_t size, const size_t align = 1) = 0;
     virtual void  Free(void* ptr) = 0;
     virtual void  Clear() = 0;
 
@@ -48,7 +50,7 @@ public:
     template<typename T, typename... Args>
     T* New(Args... args) {
 
-        void *mem = Allocate(sizeof(T));
+        void *mem = Allocate(sizeof(T), alignof(T));
         return new (mem) T(args...);
     }
 
@@ -63,11 +65,13 @@ public:
 
         assert(length > 0);
 
-        void *mem = Allocate(length * sizeof(T));
+        T *mem = static_cast<T*>(Allocate(length * sizeof(T), alignof(T)));
         for (size_t i = 0; i < length; i++)
         {    
-            new (mem + i*sizeof(T)) T();
+            new (mem + i) T();
         }
+
+        return mem;
     }
 
     /* @brief Delete object of type T.
@@ -75,7 +79,7 @@ public:
      * @param obj    Pointer to the object that should be deleted.
      */
     template<typename T>
-    void Delete(const T* obj) {
+    void Delete(T* obj) {
 
         obj->~T();
         Free(static_cast<void*>(obj));
@@ -87,7 +91,7 @@ public:
      * @param length    Number of elements in the array.
      */
     template<typename T>
-    void DeleteArr(const T* arr, const size_t length) {
+    void DeleteArr(T* arr, const size_t length) {
 
         assert(length > 0);
 
@@ -100,13 +104,17 @@ public:
     }
 
 
+    size_t  totalMemory()   const { return mTotalMemory;}
+    size_t  usedMemory()    const { return mUsedMemory;}
+    size_t  maxUsedMemory() const { return mMaxUsedMemory;}
+
 protected:
 
     // Pointer to the beginning of the allocated memory
     void *pBase;
 
-    size_t mTotalSize;
-    size_t mUsed;
-    size_t mMaxUsed;
+    size_t mTotalMemory;
+    size_t mUsedMemory;
+    size_t mMaxUsedMemory;
 
 };
