@@ -8,7 +8,6 @@ StackAllocator::StackAllocator(const size_t totalMemory) :
 {
     mBaseAddress = reinterpret_cast<uintptr_t>(pBase);
     mTopAddress = mBaseAddress;
-
 }
 
 StackAllocator::~StackAllocator() {
@@ -20,8 +19,8 @@ void* StackAllocator::Allocate(const size_t size, const size_t align) {
     // allow only power of 2 alignments
     assert( align > 0 && (align & (align - 1)) == 0);
 
-    uint64_t adjustment = align - mTopAddress & (align - 1);
-    // if mTopAddress is already properly aligned adjustment = 0
+    size_t adjustment = align - mTopAddress & (align - 1);
+    // if mTopAddress is already properly aligned then adjustment = 0
     adjustment &= align - 1;
 
     uintptr_t alignedAddress = mTopAddress + adjustment;
@@ -37,13 +36,15 @@ void* StackAllocator::Allocate(const size_t size, const size_t align) {
     return reinterpret_cast<void*>(alignedAddress);
 }
 
-void  StackAllocator::Free(void* ptr) {
+void StackAllocator::Free(void* ptr) {
+
+    assert(ptr != nullptr);
     
     uintptr_t newTopAddress = reinterpret_cast<uintptr_t>(ptr);
 
     //Do nothing if attemt is made to free memory outside used memory range
-    if(mTopAddress <= newTopAddress) {
-
+    if(mTopAddress <= newTopAddress)
+    {
         return;
     }
 
@@ -51,7 +52,7 @@ void  StackAllocator::Free(void* ptr) {
     mUsedMemory = mTopAddress - mBaseAddress;
 }
 
-void  StackAllocator::Clear() {
+void StackAllocator::Clear() {
 
     mTopAddress = mBaseAddress;
     mUsedMemory = 0;

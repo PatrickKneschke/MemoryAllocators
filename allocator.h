@@ -20,7 +20,7 @@ public:
 
     /* @brief Constructor that allocates the managed memory portion.
      *
-     * @param totalMemory    The size of the allocated memory in bytes.
+     * @param totalMemory    The size of the managed memory space in bytes.
      */
     IAllocator(const size_t totalMemory) : 
         mTotalMemory {totalMemory}, 
@@ -111,7 +111,7 @@ public:
 protected:
 
     // Pointer to the beginning of the allocated memory
-    void *pBase;
+    void* pBase;
 
     size_t mTotalMemory;
     size_t mUsedMemory;
