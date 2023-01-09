@@ -73,11 +73,17 @@ int main(int argc, char *argv[]) {
     //benchmarkStack(10*MB);
     FreeListAllocator listAlloc(10*KB);
     
+    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
     void *p1 = listAlloc.Allocate(64, 16);
+    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
     void *p2 = listAlloc.Allocate(64, 16);
+    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
     void *p3 = listAlloc.Allocate(64, 16);
+    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
     listAlloc.Free(p2);
+    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
     listAlloc.Free(p1);
+    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
 
     return 0;
 }
