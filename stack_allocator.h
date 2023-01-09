@@ -2,7 +2,6 @@
 
 
 #include "allocator.h"
-#include <cstdint>
 
 
 class StackAllocator : public IAllocator{

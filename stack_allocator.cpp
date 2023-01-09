@@ -16,12 +16,7 @@ StackAllocator::~StackAllocator() {
 
 void* StackAllocator::Allocate(const size_t size, const size_t align) {
     
-    // allow only power of 2 alignments
-    assert( align > 0 && (align & (align - 1)) == 0);
-
-    size_t adjustment = align - mTopAddress & (align - 1);
-    // if mTopAddress is already properly aligned then adjustment = 0
-    adjustment &= align - 1;
+    size_t adjustment = getAlignmentAdjustment(mTopAddress, align);
 
     uintptr_t alignedAddress = mTopAddress + adjustment;
     if (alignedAddress - mBaseAddress + size > mTotalMemory) 

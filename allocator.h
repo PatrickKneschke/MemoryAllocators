@@ -2,6 +2,7 @@
 
 
 #include <cassert>
+#include <cstdint>
 #include <cstdlib>
 
 
@@ -108,7 +109,27 @@ public:
     size_t  usedMemory()    const { return mUsedMemory;}
     size_t  maxUsedMemory() const { return mMaxUsedMemory;}
 
+
 protected:
+
+    /* @brief Calculated the adjustment in bytes to properly align a given memory address
+     *
+     * @param address    The memory address to align.
+     * @param align    The desired alignment.
+     * 
+     * @return The adjustment to address in bytes.
+     */
+    size_t getAlignmentAdjustment(uintptr_t address, size_t align) {
+
+        // allow only power of 2 alignments
+        assert( align > 0 && (align & (align - 1)) == 0);
+
+        size_t adjustment = align - address & (align - 1);
+        // if address is already properly aligned then adjustment = 0
+        adjustment &= align - 1;
+
+        return adjustment;
+    }
 
     // Pointer to the beginning of the allocated memory
     void* pBase;

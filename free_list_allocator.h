@@ -2,7 +2,6 @@
 
 
 #include "allocator.h"
-#include <cstdint>
 
 
 class FreeListAllocator : public IAllocator{

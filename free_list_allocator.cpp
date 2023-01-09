@@ -17,9 +17,6 @@ FreeListAllocator::~FreeListAllocator() {
 
 void* FreeListAllocator::Allocate(const size_t size, const size_t align) {
     
-    // allow only power of 2 alignments
-    assert( align > 0 && (align & (align - 1)) == 0);
-
     size_t requiredSize = size + sizeof(AllocHeader) + align - 1;
     
     // find large enough memory region for allocation
@@ -35,11 +32,8 @@ void* FreeListAllocator::Allocate(const size_t size, const size_t align) {
         throw std::overflow_error("Freelist allocator does not have a large enough memory region available.");
     }
 
-    size_t adjustment = align - (curr->address + sizeof(AllocHeader)) & (align - 1);
-    // if current address is already properly aligned then adjustment = 0
-    adjustment &= align - 1;
-
     // create a new node from remaining memory region of current node
+    size_t adjustment = getAlignmentAdjustment(curr->address + sizeof(AllocHeader), align);
     uintptr_t alignedAddress = curr->address + adjustment + sizeof(AllocHeader);
     FreeNode *newNode = new (reinterpret_cast<void*>(alignedAddress + size)) FreeNode(curr->address + curr->size - alignedAddress - size, curr->next);
 
