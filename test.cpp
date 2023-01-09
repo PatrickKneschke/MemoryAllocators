@@ -1,4 +1,5 @@
 
+#include "free_list_allocator.h"
 #include "stack_allocator.h"
 
 #include <chrono>
@@ -69,7 +70,14 @@ int main(int argc, char *argv[]) {
     uint32_t KB = 1024;
     uint32_t MB = KB*KB;
 
-    benchmarkStack(10*MB);
+    //benchmarkStack(10*MB);
+    FreeListAllocator listAlloc(10*KB);
+    
+    void *p1 = listAlloc.Allocate(64, 16);
+    void *p2 = listAlloc.Allocate(64, 16);
+    void *p3 = listAlloc.Allocate(64, 16);
+    listAlloc.Free(p2);
+    listAlloc.Free(p1);
 
     return 0;
 }

@@ -24,7 +24,7 @@ void* StackAllocator::Allocate(const size_t size, const size_t align) {
     adjustment &= align - 1;
 
     uintptr_t alignedAddress = mTopAddress + adjustment;
-    if(alignedAddress - mBaseAddress + size > mTotalMemory) 
+    if (alignedAddress - mBaseAddress + size > mTotalMemory) 
     {
         throw std::overflow_error("Stack allocator out of memory!");
     }
@@ -43,7 +43,7 @@ void StackAllocator::Free(void* ptr) {
     uintptr_t newTopAddress = reinterpret_cast<uintptr_t>(ptr);
 
     //Do nothing if attemt is made to free memory outside used memory range
-    if(mTopAddress <= newTopAddress)
+    if (mTopAddress <= newTopAddress)
     {
         return;
     }

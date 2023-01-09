@@ -2,6 +2,8 @@
 #include "free_list_allocator.h"
 #include <stdexcept>
 
+#include <iostream>
+
 
 FreeListAllocator::FreeListAllocator(const size_t totalMemory) :
     IAllocator(totalMemory)
@@ -20,14 +22,15 @@ void* FreeListAllocator::Allocate(const size_t size, const size_t align) {
 
     size_t requiredSize = size + sizeof(AllocHeader) + align - 1;
     
+    // find large enough memory region for allocation
     FreeNode *curr = pHead, *prev = nullptr;
-    while(curr && curr->size < requiredSize)
+    while (curr && curr->size < requiredSize)
     {
         prev = curr;
         curr = curr->next;
     }
 
-    if(curr == nullptr)
+    if (curr == nullptr)
     {
         throw std::overflow_error("Freelist allocator does not have a large enough memory region available.");
     }
@@ -36,13 +39,23 @@ void* FreeListAllocator::Allocate(const size_t size, const size_t align) {
     // if current address is already properly aligned then adjustment = 0
     adjustment &= align - 1;
 
+    // create a new node from remaining memory region of current node
     uintptr_t alignedAddress = curr->address + adjustment + sizeof(AllocHeader);
+    FreeNode *newNode = new (reinterpret_cast<void*>(alignedAddress + size)) FreeNode(curr->address + curr->size - alignedAddress - size, curr->next);
+
+    if (prev == nullptr)
+    {
+        pHead = newNode;
+    }
+    else
+    {
+        prev->next = newNode;
+    }
+
+    // place allocation header in front of allocated memory section
     AllocHeader *header = reinterpret_cast<AllocHeader*>(alignedAddress - sizeof(AllocHeader));
     header->size = size;
     header->adjustment = adjustment;
-
-    FreeNode *newNode = new (reinterpret_cast<void*>(alignedAddress + size)) FreeNode(curr->address + curr->size - alignedAddress - size, curr->next);
-    prev->next = newNode;
 
     return reinterpret_cast<void*>(alignedAddress);
 }
@@ -51,26 +64,44 @@ void FreeListAllocator::Free(void* ptr) {
 
     assert(ptr != nullptr);
 
+    // start address and size of free freed memory section
     uintptr_t freeAddress = reinterpret_cast<uintptr_t>(ptr);
     AllocHeader *header = reinterpret_cast<AllocHeader*>( freeAddress - sizeof(AllocHeader) );
     freeAddress -= header->adjustment + sizeof(AllocHeader);
-    
-    FreeNode *newNode = new (reinterpret_cast<void*>(freeAddress)) FreeNode(header->size + header->adjustment + sizeof(AllocHeader));
+    size_t freeSize = header->adjustment + sizeof(AllocHeader) + header->size;
 
-    if(freeAddress < pHead->address)
+    // find adjacent nodes
+    FreeNode *nextNode = pHead, *prevNode = nullptr;
+    while (nextNode->address < freeAddress)
     {
-        newNode->next = pHead;
+        prevNode = nextNode;
+        nextNode = nextNode->next;
+    }
+
+    // combine freed memory section with adjacent nodes if necessary
+    if (prevNode && prevNode->address + prevNode->size == freeAddress)
+    {
+        freeAddress = prevNode->address;
+        freeSize += prevNode->size;
+    }
+    if (nextNode && nextNode->address == freeAddress + freeSize)
+    {
+        freeSize += nextNode->size;
+        nextNode = nextNode->next;
+    }
+    
+    // create new node for freed section, this may override prevNode, but all pointers are still valid 
+    FreeNode *newNode = new (reinterpret_cast<void*>(freeAddress)) FreeNode(freeSize, nextNode);
+    
+    if (prevNode == nullptr)
+    {
         pHead = newNode;
         return;
     }
-
-    FreeNode *curr = pHead;
-    while(curr->next && curr->next->address < freeAddress)
+    if (prevNode != newNode)
     {
-        curr = curr->next;
+        prevNode->next = newNode;
     }
-    newNode->next = curr->next;
-    curr->next = newNode;
 }
 
 void FreeListAllocator::Clear() {
