@@ -121,11 +121,11 @@ protected:
      */
     size_t getAlignmentAdjustment(uintptr_t address, size_t align) {
 
-        // allow only power of 2 alignments
+        // Allow only power of 2 alignments
         assert( align > 0 && (align & (align - 1)) == 0);
 
         size_t adjustment = align - address & (align - 1);
-        // if address is already properly aligned then adjustment = 0
+        // If address is already properly aligned then adjustment = 0
         adjustment &= align - 1;
 
         return adjustment;

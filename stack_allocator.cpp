@@ -37,7 +37,7 @@ void StackAllocator::Free(void* ptr) {
     
     uintptr_t newTopAddress = reinterpret_cast<uintptr_t>(ptr);
 
-    //Do nothing if attemt is made to free memory outside used memory range
+    // Do nothing if attempt is made to free memory outside used memory range
     if (mTopAddress <= newTopAddress)
     {
         return;

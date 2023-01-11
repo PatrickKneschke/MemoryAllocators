@@ -5,6 +5,7 @@
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <queue>
 #include <vector>
 
 
@@ -65,25 +66,103 @@ void benchmarkStack(size_t totalMemory) {
 }
 
 
+void benchmarkList(size_t totalMemory) {
+
+    std::vector<size_t> allocationSizes = {32, 64, 128, 256, 512, 1024};    
+    size_t numOperations = 500000;
+    std::queue<void*> ptrs;
+
+    srand(time(nullptr));
+
+    // test stack allocator
+    FreeListAllocator listAlloc(totalMemory);
+
+    Clock clock;    
+    Time start = clock.now();
+
+    // calls to Allocate() and Free() with random sizes
+    // if out of memory do up to 10 calls to Free() to create space
+    for (size_t i = 0; i < numOperations; i++)
+    {
+        if(rand() % 5 == 0 && !ptrs.empty())
+        {
+            listAlloc.Free(ptrs.front());
+            ptrs.pop();
+            continue;
+        }
+        else
+        {
+            int r = rand() % 6;
+            try
+            {
+                void *p = listAlloc.Allocate(allocationSizes[r]);
+                ptrs.push(p);
+            }
+            catch(const std::exception& e)
+            {
+                for (size_t j = 0; j < 10; j++)
+                {
+                    if(ptrs.empty())
+                    {
+                        break;
+                    }
+                    
+                    listAlloc.Free(ptrs.front());
+                    ptrs.pop();
+                    ++i;
+                }            
+            }        
+        }
+    }
+    
+
+    Time end = clock.now();
+
+    std::cout << "\nFreeListAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << '\n';
+
+    while(!ptrs.empty())
+    {
+        ptrs.pop();
+    }
+    
+    // test malloc
+    // calls to malloc() and free() with random sizes
+    start = clock.now();
+
+    for(size_t i = 0; i < numOperations; i++)
+    {
+        if(rand() % 5 == 0 && !ptrs.empty())
+        {
+            free(ptrs.front());
+            ptrs.pop();
+            continue;
+        }
+
+        int r = rand() % 6;
+        try
+        {        
+            void *p = malloc(allocationSizes[r]);
+            ptrs.push(p);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+
+    end = clock.now();
+
+    std::cout << "malloc/free : " << numOperations << " in " << duration(start, end) / 1000000.0 << " s" << '\n';    
+}
+
+
 int main(int argc, char *argv[]) {
  
     uint32_t KB = 1024;
     uint32_t MB = KB*KB;
 
-    //benchmarkStack(10*MB);
-    FreeListAllocator listAlloc(10*KB);
-    
-    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
-    void *p1 = listAlloc.Allocate(64, 16);
-    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
-    void *p2 = listAlloc.Allocate(64, 16);
-    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
-    void *p3 = listAlloc.Allocate(64, 16);
-    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
-    listAlloc.Free(p2);
-    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
-    listAlloc.Free(p1);
-    std::cout << listAlloc.usedMemory() << "   " << listAlloc.maxUsedMemory() << '\n';
+    benchmarkStack(10*MB);
+    benchmarkList(10*MB);
 
     return 0;
 }
