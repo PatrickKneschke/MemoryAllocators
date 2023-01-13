@@ -21,12 +21,13 @@ int64_t duration(Time start, Time end) {
 
 void benchmarkStack(size_t totalMemory) {
 
-    std::vector<size_t> allocationSizes = {32, 64, 128, 256, 512, 1024};
-    std::vector<size_t> numAllocations = {totalMemory/32/2, totalMemory/64, totalMemory/128, totalMemory/256, totalMemory/512, totalMemory/1024};
+    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};  
+    std::vector<size_t> numAllocations(allocationSizes.size());
    
     size_t numOperations = 0;
-    for(size_t i = 0; i < numAllocations.size(); i++)
+    for(size_t i = 0; i < allocationSizes.size(); i++)
     {
+        numAllocations[i] = totalMemory / allocationSizes[i];
         numOperations += numAllocations[i];
     }
 
@@ -67,9 +68,9 @@ void benchmarkStack(size_t totalMemory) {
 
 
 void benchmarkList(size_t totalMemory) {
-
-    std::vector<size_t> allocationSizes = {32, 64, 128, 256, 512, 1024};    
-    size_t numOperations = 500000;
+  
+    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};    
+    size_t numOperations = 10000000;
     std::queue<void*> ptrs;
 
     srand(time(nullptr));
@@ -161,8 +162,8 @@ int main(int argc, char *argv[]) {
     uint32_t KB = 1024;
     uint32_t MB = KB*KB;
 
-    benchmarkStack(10*MB);
-    benchmarkList(10*MB);
+    benchmarkStack(100*MB);
+    benchmarkList(100*MB);
 
     return 0;
 }

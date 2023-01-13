@@ -112,7 +112,7 @@ public:
 
 protected:
 
-    /* @brief Calculated the adjustment in bytes to properly align a given memory address
+    /* @brief Calculates the adjustment in bytes to properly align a given memory address
      *
      * @param address    The memory address to align.
      * @param align    The desired alignment.
