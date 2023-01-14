@@ -157,6 +157,30 @@ void benchmarkList(size_t totalMemory) {
 }
 
 
+struct A {
+
+    float x;
+    float y;
+    float z;
+    float w;
+};
+
+struct B {
+
+    int i;
+    double d;
+    char c;
+};
+
+struct C {
+
+    alignas(16) A a;
+    size_t s;
+    B *pb;
+    double d;
+};
+
+
 int main(int argc, char *argv[]) {
  
     uint32_t KB = 1024;
@@ -164,6 +188,15 @@ int main(int argc, char *argv[]) {
 
     benchmarkStack(100*MB);
     benchmarkList(100*MB);
+
+
+    sizeof(A);
+    alignof(A);
+    sizeof(B);
+    alignof(B);
+    sizeof(C);
+    alignof(C);
+
 
     return 0;
 }

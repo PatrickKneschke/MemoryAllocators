@@ -4,6 +4,15 @@
 #include "allocator.h"
 
 
+/* @brief Free list implementation of IAllocator.
+ * 
+ * Keeps track of unallocated memory regions with a list of FreeNodes, holding the size and address of the free region.
+ * Allocates new memory from the first FreeNode large enough.
+ * Frees memory by creating a new FreeNode in place of the allocated memory section or merges it with dorect neighbors.
+ * Clears all allocations by creating a new pHead FreeNode holding all the managed memory.
+ * 
+ * @class 
+ */
 class FreeListAllocator : public IAllocator{
 
     struct FreeNode {
@@ -30,15 +39,34 @@ class FreeListAllocator : public IAllocator{
 public:
 
     FreeListAllocator() = delete;
+
+    /* @brief Constructor that allocates the managed memory portion and creates pHead FreeNode.
+     *
+     * @param totalMemory    The size of the managed memory space in bytes.
+     */
     explicit FreeListAllocator(const size_t totalMemory);
 
+    /* @brief Default destructor that does nothing.
+     */
     ~FreeListAllocator();
     
-    
+    /* @brief Allocates a properly aligned section of memory from the first FreeNode large enough. 
+     *  
+     * @param size    The size of the allocated memory section.
+     * @param align    The alignment of the allocated memory section. Must be non-zero and a power of two.
+     * 
+     * return Pointer to the allocated memory.
+     */
     void* Allocate(const size_t size, const size_t align = 1) override;
 
+    /* @brief Frees the allocated memory section at ptr and creates a new FreeNode at that position or merges the new node with direct neighbors.
+     * 
+     * @param ptr    Pointer to the memory position to free.
+     */
     void  Free(void* ptr) override;
 
+    /* @brief Frees all the allocated memory by creating a new pHead FreeNode containing the whole memory.
+     */
     void  Clear() override;
 
 

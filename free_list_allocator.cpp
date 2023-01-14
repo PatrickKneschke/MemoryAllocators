@@ -2,8 +2,6 @@
 #include "free_list_allocator.h"
 #include <stdexcept>
 
-#include <iostream>
-
 
 FreeListAllocator::FreeListAllocator(const size_t totalMemory) :
     IAllocator(totalMemory)

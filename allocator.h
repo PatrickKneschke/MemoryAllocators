@@ -6,12 +6,12 @@
 #include <cstdlib>
 
 
-/* @brief Allocator base class. 
- * @class 
- *
- * Abstract base class for allocators used to manage a large portion of memory.
+/* @brief Abstract base class for allocators used to manage a large portion of memory.
+ * 
  * Provides implementation of New and Delete for single objects and arrays, shared by all derived allocators.
  * Provides interface methods to Allocate and Free portions of memory and Clear the entire memory, to be implemented by derived allocators.
+ * 
+ * @class 
  */
 class IAllocator {
 

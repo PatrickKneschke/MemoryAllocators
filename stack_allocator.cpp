@@ -21,7 +21,7 @@ void* StackAllocator::Allocate(const size_t size, const size_t align) {
     uintptr_t alignedAddress = mTopAddress + adjustment;
     if (alignedAddress - mBaseAddress + size > mTotalMemory) 
     {
-        throw std::overflow_error("Stack allocator out of memory!");
+        throw std::overflow_error("Stack allocator is out of memory!");
     }
 
     mTopAddress = alignedAddress + size;

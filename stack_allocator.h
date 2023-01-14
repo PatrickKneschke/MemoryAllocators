@@ -4,6 +4,14 @@
 #include "allocator.h"
 
 
+/* @brief Stack implementation of IAllocator.
+ * 
+ * Allocates new memory from mTopAddress of the used memory region.
+ * Frees memory by moving mTopAddress of the used memory region down to a specific address, freeing all allocated memory above.
+ * Clears all allocations by setting mTopAddress to mBaseAddress of the managed memory space.
+ * 
+ * @class 
+ */
 class StackAllocator : public IAllocator{
 
 public:
