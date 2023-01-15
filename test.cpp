@@ -1,5 +1,6 @@
 
 #include "free_list_allocator.h"
+#include "pool_allocator.h"
 #include "stack_allocator.h"
 
 #include <chrono>
@@ -91,29 +92,27 @@ void benchmarkList(size_t totalMemory) {
             ptrs.pop();
             continue;
         }
-        else
+         
+        int r = rand() % 6;
+        try
         {
-            int r = rand() % 6;
-            try
-            {
-                void *p = listAlloc.Allocate(allocationSizes[r]);
-                ptrs.push(p);
-            }
-            catch(const std::exception& e)
-            {
-                for (size_t j = 0; j < 10; j++)
-                {
-                    if(ptrs.empty())
-                    {
-                        break;
-                    }
-                    
-                    listAlloc.Free(ptrs.front());
-                    ptrs.pop();
-                    ++i;
-                }            
-            }        
+            void *p = listAlloc.Allocate(allocationSizes[r]);
+            ptrs.push(p);
         }
+        catch(const std::exception& e)
+        {
+            for (size_t j = 0; j < 10; j++)
+            {
+                if(ptrs.empty())
+                {
+                    break;
+                }
+                    
+                listAlloc.Free(ptrs.front());
+                ptrs.pop();
+                ++i;
+            }            
+        }        
     }
     
 
@@ -157,28 +156,89 @@ void benchmarkList(size_t totalMemory) {
 }
 
 
-struct A {
+void benchmarkPool(size_t totalMemory, size_t nodeSize) {
+  
+    size_t numOperations = 10000000;
+    std::queue<void*> ptrs;
 
-    float x;
-    float y;
-    float z;
-    float w;
-};
+    srand(time(nullptr));
 
-struct B {
+    // test stack allocator
+    PoolAllocator poolAlloc(totalMemory, nodeSize);
 
-    int i;
-    double d;
-    char c;
-};
+    Clock clock;    
+    Time start = clock.now();
 
-struct C {
+    // random calls to Allocate() and Free()
+    // if out of memory do up to 10 calls to Free() to create space
+    for (size_t i = 0; i < numOperations; i++)
+    {
+        if(rand() % 5 == 0 && !ptrs.empty())
+        {
+            poolAlloc.Free(ptrs.front());
+            ptrs.pop();
+            continue;
+        }
+        
+        try
+        {
+            void *p = poolAlloc.Allocate(nodeSize);
+            ptrs.push(p);
+        }
+        catch(const std::exception& e)
+        {
+            for (size_t j = 0; j < 10; j++)
+            {
+                if(ptrs.empty())
+                {
+                    break;
+                }
+                   
+                poolAlloc.Free(ptrs.front());
+                ptrs.pop();
+                ++i;
+            }        
+        }  
+    }
+    
 
-    alignas(16) A a;
-    size_t s;
-    B *pb;
-    double d;
-};
+    Time end = clock.now();
+
+    std::cout << "\nPoolAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << '\n';
+
+    while(!ptrs.empty())
+    {
+        ptrs.pop();
+    }
+    
+    // test malloc
+    // random calls to malloc() and free()
+    start = clock.now();
+
+    for(size_t i = 0; i < numOperations; i++)
+    {
+        if(rand() % 5 == 0 && !ptrs.empty())
+        {
+            free(ptrs.front());
+            ptrs.pop();
+            continue;
+        }
+        
+        try
+        {        
+            void *p = malloc(nodeSize);
+            ptrs.push(p);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+
+    end = clock.now();
+
+    std::cout << "malloc/free : " << numOperations << " in " << duration(start, end) / 1000000.0 << " s" << '\n';    
+}
 
 
 int main(int argc, char *argv[]) {
@@ -188,15 +248,7 @@ int main(int argc, char *argv[]) {
 
     benchmarkStack(100*MB);
     benchmarkList(100*MB);
-
-
-    sizeof(A);
-    alignof(A);
-    sizeof(B);
-    alignof(B);
-    sizeof(C);
-    alignof(C);
-
+    benchmarkPool(100*MB, 1*KB);
 
     return 0;
 }
