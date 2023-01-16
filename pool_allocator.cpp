@@ -5,18 +5,18 @@
 #include <iostream>
 
 
-PoolAllocator::PoolAllocator(const size_t totalMemory, const size_t nodeSize) :
+PoolAllocator::PoolAllocator(const size_t totalMemory, const size_t chunkSize) :
     IAllocator(totalMemory),
-    mNodeSize {nodeSize}
+    mChunkSize {chunkSize}
 {
-    assert(totalMemory % nodeSize == 0);
-    mNumNodes = totalMemory / nodeSize;
+    assert(totalMemory % chunkSize == 0);
+    mNumChunks = totalMemory / chunkSize;
 
     pHead = nullptr;
     uintptr_t address = reinterpret_cast<uintptr_t>(pBase) + mTotalMemory;
-    for (size_t i = 0; i < mNumNodes; i++)
+    for (size_t i = 0; i < mNumChunks; i++)
     {
-        address -= nodeSize;
+        address -= chunkSize;
         pHead = new (reinterpret_cast<void*>(address)) PoolNode(pHead);
     }    
 }
@@ -27,7 +27,8 @@ PoolAllocator::~PoolAllocator() {
 
 void* PoolAllocator::Allocate(const size_t size, const size_t align) {
 
-    assert(size <= mNodeSize);
+    assert(size <= mChunkSize);
+    assert(mChunkSize % align == 0);
 
     if(!pHead) {
 
@@ -37,7 +38,7 @@ void* PoolAllocator::Allocate(const size_t size, const size_t align) {
     void *mem = reinterpret_cast<void*>(pHead);
     pHead = pHead->next;
     
-    mUsedMemory += mNodeSize;
+    mUsedMemory += mChunkSize;
     mMaxUsedMemory = std::max(mMaxUsedMemory, mUsedMemory);
 
     return mem;
@@ -49,7 +50,7 @@ void PoolAllocator::Free(void* ptr) {
 
     pHead = new (ptr) PoolNode(pHead);
     
-    mUsedMemory -= mNodeSize;
+    mUsedMemory -= mChunkSize;
 }
 
 void PoolAllocator::Clear() {
