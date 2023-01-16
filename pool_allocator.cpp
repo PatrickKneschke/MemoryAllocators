@@ -10,15 +10,9 @@ PoolAllocator::PoolAllocator(const size_t totalMemory, const size_t chunkSize) :
     mChunkSize {chunkSize}
 {
     assert(totalMemory % chunkSize == 0);
-    mNumChunks = totalMemory / chunkSize;
 
-    pHead = nullptr;
-    uintptr_t address = reinterpret_cast<uintptr_t>(pBase) + mTotalMemory;
-    for (size_t i = 0; i < mNumChunks; i++)
-    {
-        address -= chunkSize;
-        pHead = new (reinterpret_cast<void*>(address)) PoolNode(pHead);
-    }    
+    mNumChunks = totalMemory / chunkSize;
+    Clear();   
 }
 
 PoolAllocator::~PoolAllocator() {
@@ -54,7 +48,12 @@ void PoolAllocator::Free(void* ptr) {
 }
 
 void PoolAllocator::Clear() {
-    
-    pHead = new (pBase) PoolNode();
-    mUsedMemory = 0;
+
+    pHead = nullptr;
+    uintptr_t address = reinterpret_cast<uintptr_t>(pBase) + mTotalMemory;
+    for (size_t i = 0; i < mNumChunks; i++)
+    {
+        address -= mChunkSize;
+        pHead = new (reinterpret_cast<void*>(address)) PoolNode(pHead);
+    } 
 }

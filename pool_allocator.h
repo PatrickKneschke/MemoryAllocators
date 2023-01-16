@@ -9,7 +9,7 @@
  * Splits the managed memory space into chunks of equal size and Keeps track of unallocated memory regions with a linked list of PoolNodes.
  * Allocates new memory from pHead of the list.
  * Frees memory by creating a new PoolNode in place of the allocated memory section and makes it the new pHead.
- * Clears all allocations by creatig a new pHead at the start of the managed memory space.
+ * Clears all allocations by creatig a new list of PoolNodes covering the whole memory space.
  * 
  * @class 
  */
@@ -52,7 +52,7 @@ public:
      */
     void  Free(void* ptr) override;
 
-    /* @brief Frees all the allocated memory by creating a new pHead PoolNode at the start of the managed memory space.
+    /* @brief Frees all the allocated memory by creating a new list of PoolNodes covering the whole memory space.
      */
     void  Clear() override;
 
