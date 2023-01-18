@@ -3,8 +3,8 @@
 #include <stdexcept>
 
 
-FreeListAllocator::FreeListAllocator(const size_t totalMemory) :
-    IAllocator(totalMemory)
+FreeListAllocator::FreeListAllocator(const size_t totalMemory, IAllocator *parent) :
+    IAllocator(totalMemory, parent)
 {
     pHead = new (pBase) FreeNode(mTotalMemory, nullptr);
 }

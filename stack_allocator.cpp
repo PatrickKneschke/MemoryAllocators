@@ -3,8 +3,8 @@
 #include <stdexcept>
 
 
-StackAllocator::StackAllocator(const size_t totalMemory) :
-    IAllocator(totalMemory)
+StackAllocator::StackAllocator(const size_t totalMemory, IAllocator *parent) :
+    IAllocator(totalMemory, parent)
 {
     mBaseAddress = reinterpret_cast<uintptr_t>(pBase);
     mTopAddress = mBaseAddress;

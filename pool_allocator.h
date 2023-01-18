@@ -6,7 +6,7 @@
 
 /* @brief Pool implementation of IAllocator.
  * 
- * Splits the managed memory space into chunks of equal size and Keeps track of unallocated memory regions with a linked list of PoolNodes.
+ * Splits the managed memory space into chunks of equal size and keeps track of unallocated memory regions with a linked list of PoolNodes.
  * Allocates new memory from pHead of the list.
  * Frees memory by creating a new PoolNode in place of the allocated memory section and makes it the new pHead.
  * Clears all allocations by creatig a new list of PoolNodes covering the whole memory space.
@@ -31,7 +31,7 @@ public:
      * @param totalMemory    The size of the managed memory space in bytes.
      * @param chunkSize    The size of each allocatable memory region.
      */
-    explicit PoolAllocator(const size_t totalMemory, const size_t chunkSize);
+    explicit PoolAllocator(const size_t totalMemory, const size_t chunkSize, IAllocator *parent = nullptr);
 
     /* @brief Default destructor that does nothing.
      */

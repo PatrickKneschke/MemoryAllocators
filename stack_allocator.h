@@ -22,7 +22,7 @@ public:
      *
      * @param totalMemory    The size of the managed memory space in bytes.
      */
-    explicit StackAllocator(const size_t totalMemory);
+    explicit StackAllocator(const size_t totalMemory, IAllocator *parent = nullptr);
 
     /* @brief Default destructor that does nothing.
      */

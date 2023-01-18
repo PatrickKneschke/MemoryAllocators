@@ -44,7 +44,7 @@ public:
      *
      * @param totalMemory    The size of the managed memory space in bytes.
      */
-    explicit FreeListAllocator(const size_t totalMemory);
+    explicit FreeListAllocator(const size_t totalMemory, IAllocator *parent = nullptr);
 
     /* @brief Default destructor that does nothing.
      */

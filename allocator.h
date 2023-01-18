@@ -23,19 +23,34 @@ public:
      *
      * @param totalMemory    The size of the managed memory space in bytes.
      */
-    IAllocator(const size_t totalMemory) : 
+    IAllocator(const size_t totalMemory, IAllocator *parent = nullptr) : 
         mTotalMemory {totalMemory}, 
         mUsedMemory {0}, 
-        mMaxUsedMemory {0} 
-    { 
-        pBase = std::malloc(mTotalMemory);
+        mMaxUsedMemory {0},
+        pParent {parent}
+    {
+        if (!pParent)
+        {
+            pBase = std::malloc(mTotalMemory);
+        }
+        else
+        {
+            pBase = pParent->Allocate(mTotalMemory, 256);
+        }
     }
 
     /* @brief Default destructor that frees the allocated memory.
      */
     ~IAllocator() {
 
-        std::free(pBase);
+        if (!pParent)
+        {
+            std::free(pBase);
+        }
+        else
+        {
+            pParent->Free(pBase);
+        }
     }
 
     virtual void* Allocate(const size_t size, const size_t align = 1) = 0;
@@ -130,6 +145,10 @@ protected:
 
         return adjustment;
     }
+
+
+    // Poiner to a parent allocator, nullptr by default
+    IAllocator *pParent;
 
     // Pointer to the beginning of the allocated memory
     void* pBase;

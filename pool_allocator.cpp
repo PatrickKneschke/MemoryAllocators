@@ -2,11 +2,9 @@
 #include "pool_allocator.h"
 #include <stdexcept>
 
-#include <iostream>
 
-
-PoolAllocator::PoolAllocator(const size_t totalMemory, const size_t chunkSize) :
-    IAllocator(totalMemory),
+PoolAllocator::PoolAllocator(const size_t totalMemory, const size_t chunkSize, IAllocator *parent) :
+    IAllocator(totalMemory, parent),
     mChunkSize {chunkSize}
 {
     assert(totalMemory % chunkSize == 0);
@@ -24,8 +22,8 @@ void* PoolAllocator::Allocate(const size_t size, const size_t align) {
     assert(size <= mChunkSize);
     assert(mChunkSize % align == 0);
 
-    if(!pHead) {
-
+    if(!pHead)
+    {
         throw std::overflow_error("Pool allocator is out of memory!");
     }
 
