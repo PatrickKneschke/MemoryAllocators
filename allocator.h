@@ -2,6 +2,7 @@
 
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 
@@ -35,7 +36,7 @@ public:
         }
         else
         {
-            pBase = pParent->Allocate(mTotalMemory, 256);
+            pBase = pParent->Allocate(mTotalMemory, sizeof(max_align_t));
         }
     }
 

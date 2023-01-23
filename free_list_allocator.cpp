@@ -6,7 +6,7 @@
 FreeListAllocator::FreeListAllocator(const size_t totalMemory, IAllocator *parent) :
     IAllocator(totalMemory, parent)
 {
-    pHead = new (pBase) FreeNode(mTotalMemory, nullptr);
+    Clear();
 }
 
 FreeListAllocator::~FreeListAllocator() {
@@ -27,7 +27,7 @@ void* FreeListAllocator::Allocate(const size_t size, const size_t align) {
 
     if (currNode == nullptr)
     {
-        throw std::overflow_error("Freelist allocator does not have a large enough memory region available.");
+        throw std::overflow_error("Free list allocator does not have a large enough memory region available.");
     }
 
     // Find properly aligned address for allocation
@@ -73,7 +73,7 @@ void FreeListAllocator::Free(void* ptr) {
 
     assert(ptr != nullptr);
 
-    // start address and size of free freed memory section
+    // start address and size of freed memory section
     uintptr_t freeAddress = reinterpret_cast<uintptr_t>(ptr);
     AllocHeader *header = reinterpret_cast<AllocHeader*>( freeAddress - sizeof(AllocHeader) );
     freeAddress -= header->adjustment + sizeof(AllocHeader);
@@ -117,6 +117,6 @@ void FreeListAllocator::Free(void* ptr) {
 
 void FreeListAllocator::Clear() {
     
-    pHead = new (pBase) FreeNode(mTotalMemory, nullptr);
+    pHead = new (pBase) FreeNode(mTotalMemory);
     mUsedMemory = 0;
 }

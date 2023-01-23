@@ -53,5 +53,7 @@ void PoolAllocator::Clear() {
     {
         address -= mChunkSize;
         pHead = new (reinterpret_cast<void*>(address)) PoolNode(pHead);
-    } 
+    }
+
+    mUsedMemory = 0;
 }

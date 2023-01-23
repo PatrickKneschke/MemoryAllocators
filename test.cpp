@@ -1,5 +1,6 @@
 
 #include "free_list_allocator.h"
+#include "free_tree_allocator.h"
 #include "pool_allocator.h"
 #include "stack_allocator.h"
 
@@ -246,9 +247,11 @@ int main(int argc, char *argv[]) {
     uint32_t KB = 1024;
     uint32_t MB = KB*KB;
 
-    benchmarkStack(100*MB);
-    benchmarkList(100*MB);
-    benchmarkPool(100*MB, 1*KB);
+    // benchmarkStack(100*MB);
+    // benchmarkList(100*MB);
+    // benchmarkPool(100*MB, 1*KB);
+
+    FreeTreeAllocator treeAlloc(10*MB);
 
     return 0;
 }
