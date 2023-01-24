@@ -21,6 +21,7 @@ public:
     /* @brief Constructor that allocates the managed memory portion.
      *
      * @param totalMemory    The size of the managed memory space in bytes.
+     * @param parent    Optional parent allocator to get memory from.
      */
     explicit StackAllocator(const size_t totalMemory, IAllocator *parent = nullptr);
 

@@ -8,7 +8,7 @@
  * 
  * Keeps track of unallocated memory regions with a list of FreeNodes, holding the size and address of the free region.
  * Allocates new memory from the first FreeNode large enough.
- * Frees memory by creating a new FreeNode in place of the allocated memory section or merges it with dorect neighbors.
+ * Frees memory by creating a new FreeNode in place of the allocated memory section or merges it with direct neighbors.
  * Clears all allocations by creating a new pHead FreeNode holding all the managed memory.
  * 
  * @class 
@@ -40,9 +40,10 @@ public:
 
     FreeListAllocator() = delete;
 
-    /* @brief Constructor that allocates the managed memory portion and creates pHead FreeNode.
+    /* @brief Constructor that allocates the managed memory portion and calls Clear() method to reset free list.
      *
      * @param totalMemory    The size of the managed memory space in bytes.
+     * @param parent    Optional parent allocator to get memory from.
      */
     explicit FreeListAllocator(const size_t totalMemory, IAllocator *parent = nullptr);
 

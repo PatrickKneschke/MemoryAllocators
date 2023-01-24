@@ -6,8 +6,9 @@
 
 #include <chrono>
 #include <iostream>
-#include <string>
 #include <queue>
+#include <random>
+#include <string>
 #include <vector>
 
 
@@ -251,7 +252,24 @@ int main(int argc, char *argv[]) {
     // benchmarkList(100*MB);
     // benchmarkPool(100*MB, 1*KB);
 
-    FreeTreeAllocator treeAlloc(10*MB);
+    FreeTreeAllocator treeAlloc(1*MB);
+    std::vector<size_t> sizes = {1*KB, 2*KB, 4*KB, 8*KB, 16*KB, 32*KB};
+    std::vector<void*> ptrs;
+    int N = 15;
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = 0; j < sizes.size(); j++)
+        {
+            ptrs.push_back(treeAlloc.Allocate(sizes[j]));
+        }
+    }
+    std::shuffle(ptrs.begin(), ptrs.end(), std::default_random_engine(time(nullptr)));
+    for (int i = 0; i < ptrs.size() / 2; i++)
+    {
+        treeAlloc.Free(ptrs[i]);
+    }
+    treeAlloc.PrintTree();
+
 
     return 0;
 }

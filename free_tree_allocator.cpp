@@ -6,65 +6,29 @@
 // JUST FOR TESTING
 
 #include <iostream>
-#include <queue>
-#include <vector>
 
 void FreeTreeAllocator::PrintTree() {
 
-    std::queue<TreeNode*> q;
-    q.push(pRoot);
-    while (!q.empty())
-    {
-        int n = q.size();
-        for (int i=0; i<n; i++)
+    std::function<void(std::string, TreeNode*, bool)> printTree;
+    printTree = [&printTree](std::string prefix, TreeNode *root, bool isLeft) {
+
+        if (root == nullptr)
         {
-            TreeNode *curr = q.front();
-            q.pop();
-
-            std::cout << '\t' << curr->size << "|" << curr->maxSize;
-
-            if(curr->left)
-            {
-                q.push(curr->left);
-            }
-            if(curr->right)
-            {
-                q.push(curr->right);
-            }
+            return;
         }
 
-        std::cout << '\n';
-    }    
-}
-
-void FreeTreeAllocator::TestTree() {
-
-    std::vector<TreeNode> nodes(7);
+        std::cout << prefix;
+        std::cout << (isLeft ? "├──" : "└──" );
+        std::cout << root->size << ":" << root->maxSize << '\n';
+        
+        printTree(prefix + (isLeft ? "│   " : "    "), root->left, true);
+        printTree(prefix + (isLeft ? "│   " : "    "), root->right, false);
     
-    auto n0 = new (reinterpret_cast<void*>(&nodes[0])) TreeNode(2);
-    auto n2 = new (reinterpret_cast<void*>(&nodes[2])) TreeNode(4);
-    auto n4 = new (reinterpret_cast<void*>(&nodes[4])) TreeNode(3);
-    auto n6 = new (reinterpret_cast<void*>(&nodes[6])) TreeNode(2);
-    auto n1 = new (reinterpret_cast<void*>(&nodes[1])) TreeNode(1);
-    auto n5 = new (reinterpret_cast<void*>(&nodes[5])) TreeNode(2);
-    auto n3 = new (reinterpret_cast<void*>(&nodes[3])) TreeNode(2);
+    };
 
-    pRoot = nullptr;
-    this->InsertNode(&nodes[3]);
-    this->InsertNode(&nodes[1]);
-    this->InsertNode(&nodes[5]);
-    this->InsertNode(&nodes[0]);
-    this->InsertNode(&nodes[2]);
-    this->InsertNode(&nodes[4]);
-    this->InsertNode(&nodes[6]);
-
-    PrintTree();
+    printTree("", pRoot, false);
 
     std::cout << "----------------------------\n";
-
-    this->RemoveNode(&nodes[3]);
-
-    PrintTree();
 }
 
 // JUST FOR TESTING END
@@ -146,12 +110,13 @@ void FreeTreeAllocator::Free(void* ptr) {
     }
     if (leftNode && reinterpret_cast<uintptr_t>(leftNode) + leftNode->size == reinterpret_cast<uintptr_t>(newNode))
     {
-        leftNode->size += newNode->size; 
-        UpdateMaxSize(leftNode->parent);
+        leftNode->size += newNode->size;
+        UpdateMaxSize(leftNode);
     }
     else
     {
         InsertNode(newNode);
+        UpdateMaxSize(newNode);
     }
 }
 
