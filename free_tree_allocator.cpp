@@ -47,8 +47,11 @@ FreeTreeAllocator::~FreeTreeAllocator() {
 
 void* FreeTreeAllocator::Allocate(const size_t size, const size_t align) {
 
+    // Pad size so that total allocated space can fit a TreeNode when freed
+    size_t paddedSize = std::max(size, sizeof(TreeNode) - sizeof(AllocHeader));
+
     // Find best memory region to allocate from
-    size_t requiredSize = size + sizeof(AllocHeader) + align - 1;    
+    size_t requiredSize = paddedSize + sizeof(AllocHeader) + align - 1;    
     TreeNode *allocNode = FindNode(requiredSize, pRoot);
     if (allocNode == nullptr)
     {
@@ -64,11 +67,11 @@ void* FreeTreeAllocator::Allocate(const size_t size, const size_t align) {
 
     // Create new node for remaining memory region if it is large enough to fit a TreeNode
     // If not use the whole free region for allocation
-    size_t newSize = reinterpret_cast<uintptr_t>(allocNode) + allocNode->size - alignedAddress - size;
-    size_t allocSize = size;
+    size_t newSize = reinterpret_cast<uintptr_t>(allocNode) + allocNode->size - alignedAddress - paddedSize;
+    size_t allocSize = paddedSize;
     if (newSize >= sizeof(TreeNode))
     {
-        TreeNode *newNode = new (reinterpret_cast<void*>(alignedAddress + size)) TreeNode(newSize);
+        TreeNode *newNode = new (reinterpret_cast<void*>(alignedAddress + paddedSize)) TreeNode(newSize);
         InsertNode(newNode);
     }
     else
@@ -80,6 +83,10 @@ void* FreeTreeAllocator::Allocate(const size_t size, const size_t align) {
     AllocHeader *header = reinterpret_cast<AllocHeader*>(alignedAddress - sizeof(AllocHeader));
     header->size = allocSize;
     header->adjustment = adjustment;
+
+
+    std::cout << '\t' << header->size << "  " << header->adjustment;
+
 
     mUsedMemory += header->adjustment + sizeof(AllocHeader) + header->size;
     mMaxUsedMemory = std::max(mMaxUsedMemory, mUsedMemory);
@@ -96,6 +103,10 @@ void FreeTreeAllocator::Free(void* ptr) {
     AllocHeader *header = reinterpret_cast<AllocHeader*>( freeAddress - sizeof(AllocHeader) );
     freeAddress -= header->adjustment + sizeof(AllocHeader);
     size_t freeSize = header->adjustment + sizeof(AllocHeader) + header->size;
+
+
+    std::cout << freeSize << " " << freeAddress;
+
 
     mUsedMemory -= freeSize;
     
@@ -128,7 +139,7 @@ void FreeTreeAllocator::Clear() {
 
 FreeTreeAllocator::TreeNode* FreeTreeAllocator::FindNode(const size_t size, TreeNode *root) {
 
-    if(root->maxSize < size)
+    if(!root || root->maxSize < size)
     {
         return nullptr;
     }

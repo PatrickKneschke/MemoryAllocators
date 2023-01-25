@@ -15,9 +15,11 @@ FreeListAllocator::~FreeListAllocator() {
 
 void* FreeListAllocator::Allocate(const size_t size, const size_t align) {
     
-    size_t requiredSize = size + sizeof(AllocHeader) + align - 1;
+    // Pad size so that total allocated space can fit a TreeNode when freed
+    size_t paddedSize = std::max(size, sizeof(FreeNode) - sizeof(AllocHeader));
 
     // Find memory region large enough for allocation
+    size_t requiredSize = paddedSize + sizeof(AllocHeader) + align - 1;
     FreeNode *currNode = pHead, *prevNode = nullptr;
     while (currNode && currNode->size < requiredSize)
     {
@@ -35,13 +37,13 @@ void* FreeListAllocator::Allocate(const size_t size, const size_t align) {
     uintptr_t alignedAddress = currNode->address + adjustment + sizeof(AllocHeader);
 
     // Create a new node from remaining memory region of current node. 
-    // If remaining memory is less than 24 byte ( 16 byte header plus 8 byte data) add it to the allocated memory section instead
-    size_t newSize = currNode->address + currNode->size - alignedAddress - size;
-    size_t allocSize = size;
+    // If remaining memory is smaller than a FreeNode add it to the allocated memory section instead
+    size_t newSize = currNode->address + currNode->size - alignedAddress - paddedSize;
+    size_t allocSize = paddedSize;
     FreeNode *newNode = nullptr;
-    if(newSize >= 24)
+    if(newSize >= sizeof(FreeNode))
     {
-        newNode = new (reinterpret_cast<void*>(alignedAddress + size)) FreeNode(newSize, currNode->next);
+        newNode = new (reinterpret_cast<void*>(alignedAddress + paddedSize)) FreeNode(newSize, currNode->next);
     }
     else
     {

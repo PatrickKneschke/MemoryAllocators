@@ -243,6 +243,106 @@ void benchmarkPool(size_t totalMemory, size_t nodeSize) {
 }
 
 
+void benchmarkTree(size_t totalMemory) {
+  
+    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};    
+    size_t numOperations = 1000;
+    std::queue<void*> ptrs;
+
+    auto seed = 1674659980; // time(nullptr);
+    std::cout << seed << '\n';
+    srand(seed);
+
+    // test stack allocator
+    FreeTreeAllocator treeAlloc(totalMemory);
+
+    Clock clock;    
+    Time start = clock.now();
+
+    // calls to Allocate() and Free() with random sizes
+    // if out of memory do up to 10 calls to Free() to create space
+    for (size_t i = 0; i < numOperations; i++)
+    {
+        if(rand() % 5 == 0 && !ptrs.empty())
+        {
+            std::cout << "free\t ";
+
+            treeAlloc.Free(ptrs.front());
+
+            std::cout << '\t' << reinterpret_cast<uintptr_t>(ptrs.front()) << '\t' << treeAlloc.usedMemory() << '\n';
+
+            ptrs.pop();
+            continue;
+        }
+         
+        int r = rand() % 6;
+        try
+        {
+            std::cout << "alloc\t "  << allocationSizes[r];
+
+            void *p = treeAlloc.Allocate(allocationSizes[r]);
+            ptrs.push(p);
+
+            std::cout<< '\t' << reinterpret_cast<uintptr_t>(p) << '\t' << treeAlloc.usedMemory() << '\n';
+        }
+        catch(const std::exception& e)
+        {
+            std::cout << "\t out of memory.\n";
+
+            for (size_t j = 0; j < 10; j++)
+            {
+                if(ptrs.empty())
+                {
+                    break;
+                }
+                    
+                treeAlloc.Free(ptrs.front());
+                ptrs.pop();
+                ++i;
+            }            
+        }        
+    }
+    
+
+    Time end = clock.now();
+
+    std::cout << "\nFreeTreeAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << '\n';
+
+    while(!ptrs.empty())
+    {
+        ptrs.pop();
+    }
+    
+    // test malloc
+    // calls to malloc() and free() with random sizes
+    start = clock.now();
+
+    for(size_t i = 0; i < numOperations; i++)
+    {
+        if(rand() % 5 == 0 && !ptrs.empty())
+        {
+            free(ptrs.front());
+            ptrs.pop();
+            continue;
+        }
+
+        int r = rand() % 6;
+        try
+        {        
+            void *p = malloc(allocationSizes[r]);
+            ptrs.push(p);
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+    }
+
+    end = clock.now();
+
+    std::cout << "malloc/free : " << numOperations << " in " << duration(start, end) / 1000000.0 << " s" << '\n';    
+}
+
 int main(int argc, char *argv[]) {
  
     uint32_t KB = 1024;
@@ -252,23 +352,7 @@ int main(int argc, char *argv[]) {
     // benchmarkList(100*MB);
     // benchmarkPool(100*MB, 1*KB);
 
-    FreeTreeAllocator treeAlloc(1*MB);
-    std::vector<size_t> sizes = {1*KB, 2*KB, 4*KB, 8*KB, 16*KB, 32*KB};
-    std::vector<void*> ptrs;
-    int N = 15;
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < sizes.size(); j++)
-        {
-            ptrs.push_back(treeAlloc.Allocate(sizes[j]));
-        }
-    }
-    std::shuffle(ptrs.begin(), ptrs.end(), std::default_random_engine(time(nullptr)));
-    for (int i = 0; i < ptrs.size() / 2; i++)
-    {
-        treeAlloc.Free(ptrs[i]);
-    }
-    treeAlloc.PrintTree();
+    benchmarkTree(1*MB);
 
 
     return 0;

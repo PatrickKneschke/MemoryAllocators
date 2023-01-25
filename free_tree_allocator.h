@@ -1,10 +1,9 @@
 #pragma once
 
 
-#include "algorithm"
 #include "allocator.h"
 
-
+#include "algorithm"
 
 
 /* @brief Free tree implementation of IAllocator.
