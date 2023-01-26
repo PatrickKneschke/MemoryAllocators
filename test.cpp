@@ -22,17 +22,14 @@ int64_t duration(Time start, Time end) {
 }
 
 
-void benchmarkStack(size_t totalMemory) {
+void benchmarkStack(size_t totalMemory, size_t numOperations) {
 
-    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};  
-    std::vector<size_t> numAllocations(allocationSizes.size());
+    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};
    
-    size_t numOperations = 0;
-    for(size_t i = 0; i < allocationSizes.size(); i++)
-    {
-        numAllocations[i] = totalMemory / allocationSizes[i];
-        numOperations += numAllocations[i];
-    }
+    auto seed =  time(nullptr);
+    std::cout << seed << '\n';
+    srand(seed);
+    
 
     // test stack allocator
     StackAllocator stAlloc(totalMemory);
@@ -40,43 +37,35 @@ void benchmarkStack(size_t totalMemory) {
     Clock clock;    
     Time start = clock.now();
 
-    for(size_t i = 0; i < numAllocations.size(); i++)
-    {
-        for (size_t j = 0; j < numAllocations[i]; j++)
+    // calls to Allocate() with random sizes
+    // if out of memory clear stack
+    for (size_t i = 0; i < numOperations; i++)
+    {         
+        int r = rand() % 6;
+        try
         {
-            void *ptr = stAlloc.Allocate(allocationSizes[i]);
+            void *p = stAlloc.Allocate(allocationSizes[r]);
         }
-        stAlloc.Clear();
+        catch(const std::exception& e)
+        {
+            stAlloc.Clear();          
+        }        
     }
 
     Time end = clock.now();
 
-    std::cout << "\nStackAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << '\n';
-
-    // test malloc
-    start = clock.now();
-
-    for(size_t i = 0; i < numAllocations.size(); i++)
-    {
-        for (size_t j = 0; j < numAllocations[i] - 1; j++)
-        {
-            void *ptr = malloc(allocationSizes[i]);
-        }
-    }
-
-    end = clock.now();
-
-    std::cout << "malloc : " << numOperations << " in " << duration(start, end) / 1000000.0 << " s" << '\n';    
+    std::cout << "StackAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << stAlloc.maxUsedMemory() << '\n';
 }
 
 
-void benchmarkList(size_t totalMemory) {
+void benchmarkList(size_t totalMemory, size_t numOperations) {
   
-    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};    
-    size_t numOperations = 10000000;
+    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};
     std::queue<void*> ptrs;
 
-    srand(time(nullptr));
+    auto seed =  time(nullptr);
+    std::cout << seed << '\n';
+    srand(seed);
 
     // test stack allocator
     FreeListAllocator listAlloc(totalMemory);
@@ -120,133 +109,13 @@ void benchmarkList(size_t totalMemory) {
 
     Time end = clock.now();
 
-    std::cout << "\nFreeListAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << listAlloc.maxUsedMemory() << '\n';
-
-    while(!ptrs.empty())
-    {
-        ptrs.pop();
-    }
-    
-    // test malloc
-    // calls to malloc() and free() with random sizes
-    start = clock.now();
-
-    for(size_t i = 0; i < numOperations; i++)
-    {
-        if(rand() % 5 == 0 && !ptrs.empty())
-        {
-            free(ptrs.front());
-            ptrs.pop();
-            continue;
-        }
-
-        int r = rand() % 6;
-        try
-        {        
-            void *p = malloc(allocationSizes[r]);
-            ptrs.push(p);
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-    }
-
-    end = clock.now();
-
-    std::cout << "malloc/free : " << numOperations << " in " << duration(start, end) / 1000000.0 << " s" << '\n';    
+    std::cout << "FreeListAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << listAlloc.maxUsedMemory() << '\n'; 
 }
 
 
-void benchmarkPool(size_t totalMemory, size_t nodeSize) {
+void benchmarkTree(size_t totalMemory, size_t numOperations) {
   
-    size_t numOperations = 10000000;
-    std::queue<void*> ptrs;
-
-    srand(time(nullptr));
-
-    // test stack allocator
-    PoolAllocator poolAlloc(totalMemory, nodeSize);
-
-    Clock clock;    
-    Time start = clock.now();
-
-    // random calls to Allocate() and Free()
-    // if out of memory do up to 10 calls to Free() to create space
-    for (size_t i = 0; i < numOperations; i++)
-    {
-        if(rand() % 5 == 0 && !ptrs.empty())
-        {
-            poolAlloc.Free(ptrs.front());
-            ptrs.pop();
-            continue;
-        }
-        
-        try
-        {
-            void *p = poolAlloc.Allocate(nodeSize);
-            ptrs.push(p);
-        }
-        catch(const std::exception& e)
-        {
-            for (size_t j = 0; j < 10; j++)
-            {
-                if(ptrs.empty())
-                {
-                    break;
-                }
-                   
-                poolAlloc.Free(ptrs.front());
-                ptrs.pop();
-                ++i;
-            }        
-        }  
-    }
-    
-
-    Time end = clock.now();
-
-    std::cout << "\nPoolAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << poolAlloc.maxUsedMemory() << '\n';
-
-    while(!ptrs.empty())
-    {
-        ptrs.pop();
-    }
-    
-    // test malloc
-    // random calls to malloc() and free()
-    start = clock.now();
-
-    for(size_t i = 0; i < numOperations; i++)
-    {
-        if(rand() % 5 == 0 && !ptrs.empty())
-        {
-            free(ptrs.front());
-            ptrs.pop();
-            continue;
-        }
-        
-        try
-        {        
-            void *p = malloc(nodeSize);
-            ptrs.push(p);
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-    }
-
-    end = clock.now();
-
-    std::cout << "malloc/free : " << numOperations << " in " << duration(start, end) / 1000000.0 << " s" << '\n';    
-}
-
-
-void benchmarkTree(size_t totalMemory) {
-  
-    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};    
-    size_t numOperations = 10000000;
+    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};
     std::queue<void*> ptrs;
 
     auto seed =  time(nullptr);
@@ -295,14 +164,75 @@ void benchmarkTree(size_t totalMemory) {
 
     Time end = clock.now();
 
-    std::cout << "\nFreeTreeAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << treeAlloc.maxUsedMemory() << '\n';
+    std::cout << "FreeTreeAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << treeAlloc.maxUsedMemory() << '\n'; 
+}
 
-    while(!ptrs.empty())
+
+void benchmarkPool(size_t totalMemory, size_t nodeSize, size_t numOperations) {
+  
+    std::queue<void*> ptrs;
+
+    auto seed =  time(nullptr);
+    std::cout << seed << '\n';
+    srand(seed);
+
+    // test stack allocator
+    PoolAllocator poolAlloc(totalMemory, nodeSize);
+
+    Clock clock;    
+    Time start = clock.now();
+
+    // random calls to Allocate() and Free()
+    // if out of memory do up to 10 calls to Free() to create space
+    for (size_t i = 0; i < numOperations; i++)
     {
-        ptrs.pop();
+        if(rand() % 5 == 0 && !ptrs.empty())
+        {
+            poolAlloc.Free(ptrs.front());
+            ptrs.pop();
+            continue;
+        }
+        
+        try
+        {
+            void *p = poolAlloc.Allocate(nodeSize);
+            ptrs.push(p);
+        }
+        catch(const std::exception& e)
+        {
+            for (size_t j = 0; j < 10; j++)
+            {
+                if(ptrs.empty())
+                {
+                    break;
+                }
+                   
+                poolAlloc.Free(ptrs.front());
+                ptrs.pop();
+                ++i;
+            }        
+        }  
     }
     
-    // test malloc
+
+    Time end = clock.now();
+
+    std::cout << "PoolAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << poolAlloc.maxUsedMemory() << '\n'; 
+}
+
+
+void benchmarkMalloc(size_t numOperations) {
+
+    std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};
+    std::queue<void*> ptrs;
+
+    auto seed =  time(nullptr);
+    std::cout << seed << '\n';
+    srand(seed);
+
+    Clock clock;    
+    Time start = clock.now(), end;
+    
     // calls to malloc() and free() with random sizes
     start = clock.now();
 
@@ -316,32 +246,26 @@ void benchmarkTree(size_t totalMemory) {
         }
 
         int r = rand() % 6;
-        try
-        {        
-            void *p = malloc(allocationSizes[r]);
-            ptrs.push(p);
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
+        void *p = malloc(allocationSizes[r]);
+        ptrs.push(p);
     }
 
     end = clock.now();
 
-    std::cout << "malloc/free : " << numOperations << " in " << duration(start, end) / 1000000.0 << " s" << '\n';    
+    std::cout << "malloc/free : " << numOperations << " in " << duration(start, end) / 1000000.0 << " s" << '\n';   
 }
+
 
 int main(int argc, char *argv[]) {
  
     uint32_t KB = 1024;
     uint32_t MB = KB*KB;
 
-    // benchmarkStack(100*MB);
-    benchmarkList(10*MB);
-    // benchmarkPool(100*MB, 1*KB);
-
-    benchmarkTree(10*MB);
+    benchmarkMalloc(10000000);
+    benchmarkStack(100*MB, 10000000);
+    benchmarkList(100*MB, 10000000);
+    benchmarkTree(100*MB, 10000000);
+    benchmarkPool(100*MB, 1*KB, 10000000);
 
     return 0;
 }
