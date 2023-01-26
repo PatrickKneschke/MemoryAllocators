@@ -10,7 +10,7 @@
  * 
  * Keeps track of unallocated memory regions with a binary search tree using the start address of the free region as a key.
  * TreeNodes hold the size of the free region and the maximum size of any region in its subtree.
- * Allocates new memory from the smallest region large enough for the allocation.
+ * Allocates new memory from the first memory region large enough.
  * Frees memory by creating a new TreeNode in place of the allocated memory section or merges it with direct neighbors.
  * Clears all allocations by creating a new pRoot TreeNode holding all the managed memory.
  * 
@@ -65,7 +65,7 @@ public:
      */
     ~FreeTreeAllocator();
     
-    /* @brief Allocates a properly aligned section of memory from the smallest TreeNode large enough for the allocation. 
+    /* @brief Allocates a properly aligned section of memory from the first TreeNode large enough for the allocation. 
      *  
      * @param size    The size of the allocated memory section.
      * @param align    The alignment of the allocated memory section. Must be non-zero and a power of two.

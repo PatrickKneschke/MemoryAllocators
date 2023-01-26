@@ -120,7 +120,7 @@ void benchmarkList(size_t totalMemory) {
 
     Time end = clock.now();
 
-    std::cout << "\nFreeListAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << '\n';
+    std::cout << "\nFreeListAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << listAlloc.maxUsedMemory() << '\n';
 
     while(!ptrs.empty())
     {
@@ -206,7 +206,7 @@ void benchmarkPool(size_t totalMemory, size_t nodeSize) {
 
     Time end = clock.now();
 
-    std::cout << "\nPoolAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << '\n';
+    std::cout << "\nPoolAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << poolAlloc.maxUsedMemory() << '\n';
 
     while(!ptrs.empty())
     {
@@ -246,10 +246,10 @@ void benchmarkPool(size_t totalMemory, size_t nodeSize) {
 void benchmarkTree(size_t totalMemory) {
   
     std::vector<size_t> allocationSizes = {16, 64, 256, 1024, 4096, 16384};    
-    size_t numOperations = 1000;
+    size_t numOperations = 10000000;
     std::queue<void*> ptrs;
 
-    auto seed = 1674659980; // time(nullptr);
+    auto seed =  time(nullptr);
     std::cout << seed << '\n';
     srand(seed);
 
@@ -265,12 +265,7 @@ void benchmarkTree(size_t totalMemory) {
     {
         if(rand() % 5 == 0 && !ptrs.empty())
         {
-            std::cout << "free\t ";
-
             treeAlloc.Free(ptrs.front());
-
-            std::cout << '\t' << reinterpret_cast<uintptr_t>(ptrs.front()) << '\t' << treeAlloc.usedMemory() << '\n';
-
             ptrs.pop();
             continue;
         }
@@ -278,17 +273,11 @@ void benchmarkTree(size_t totalMemory) {
         int r = rand() % 6;
         try
         {
-            std::cout << "alloc\t "  << allocationSizes[r];
-
             void *p = treeAlloc.Allocate(allocationSizes[r]);
             ptrs.push(p);
-
-            std::cout<< '\t' << reinterpret_cast<uintptr_t>(p) << '\t' << treeAlloc.usedMemory() << '\n';
         }
         catch(const std::exception& e)
         {
-            std::cout << "\t out of memory.\n";
-
             for (size_t j = 0; j < 10; j++)
             {
                 if(ptrs.empty())
@@ -306,7 +295,7 @@ void benchmarkTree(size_t totalMemory) {
 
     Time end = clock.now();
 
-    std::cout << "\nFreeTreeAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << '\n';
+    std::cout << "\nFreeTreeAllocator : " << numOperations << " operations in " << duration(start, end) / 1000000.0 << " s" << " , max memory " << treeAlloc.maxUsedMemory() << '\n';
 
     while(!ptrs.empty())
     {
@@ -349,11 +338,10 @@ int main(int argc, char *argv[]) {
     uint32_t MB = KB*KB;
 
     // benchmarkStack(100*MB);
-    // benchmarkList(100*MB);
+    benchmarkList(10*MB);
     // benchmarkPool(100*MB, 1*KB);
 
-    benchmarkTree(1*MB);
-
+    benchmarkTree(10*MB);
 
     return 0;
 }

@@ -84,10 +84,6 @@ void* FreeTreeAllocator::Allocate(const size_t size, const size_t align) {
     header->size = allocSize;
     header->adjustment = adjustment;
 
-
-    std::cout << '\t' << header->size << "  " << header->adjustment;
-
-
     mUsedMemory += header->adjustment + sizeof(AllocHeader) + header->size;
     mMaxUsedMemory = std::max(mMaxUsedMemory, mUsedMemory);
 
@@ -103,10 +99,6 @@ void FreeTreeAllocator::Free(void* ptr) {
     AllocHeader *header = reinterpret_cast<AllocHeader*>( freeAddress - sizeof(AllocHeader) );
     freeAddress -= header->adjustment + sizeof(AllocHeader);
     size_t freeSize = header->adjustment + sizeof(AllocHeader) + header->size;
-
-
-    std::cout << freeSize << " " << freeAddress;
-
 
     mUsedMemory -= freeSize;
     
@@ -139,23 +131,35 @@ void FreeTreeAllocator::Clear() {
 
 FreeTreeAllocator::TreeNode* FreeTreeAllocator::FindNode(const size_t size, TreeNode *root) {
 
-    if(!root || root->maxSize < size)
+    if (!root || root->maxSize < size)
     {
         return nullptr;
     }
 
-    size_t leftMax = root->left ? root->left->maxSize : 0;
-    size_t rightMax = root->right ? root->right->maxSize : 0;
-    if (leftMax <= rightMax && leftMax >= size)
+    if (root->size >= size)
+    {
+        return root;
+    }
+
+    if (root->left && root->left->maxSize >= size)
     {
         return FindNode(size, root->left);
     }
-    else if(rightMax >= size)
-    {
-        return FindNode(size, root->right);
-    }
 
-    return root;
+    return FindNode(size, root->right);
+
+    // size_t leftMax = root->left ? root->left->maxSize : 0;
+    // size_t rightMax = root->right ? root->right->maxSize : 0;
+    // if (leftMax <= rightMax && leftMax >= size)
+    // {
+    //     return FindNode(size, root->left);
+    // }
+    // else if(rightMax >= size)
+    // {
+    //     return FindNode(size, root->right);
+    // }
+
+    // return root;
 }
 
 void FreeTreeAllocator::InsertNode(TreeNode *newNode) {
