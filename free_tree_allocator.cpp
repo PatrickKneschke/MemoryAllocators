@@ -61,9 +61,6 @@ void* FreeTreeAllocator::Allocate(const size_t size, const size_t align) {
     // Get aligned address for allocation
     size_t adjustment = getAlignmentAdjustment(reinterpret_cast<uintptr_t>(allocNode) + sizeof(AllocHeader), align);
     uintptr_t alignedAddress = reinterpret_cast<uintptr_t>(allocNode) + adjustment + sizeof(AllocHeader);
-    
-    // Remove old node from tree
-    RemoveNode(allocNode);
 
     // Create new node for remaining memory region if it is large enough to fit a TreeNode
     // If not use the whole free region for allocation
@@ -72,11 +69,12 @@ void* FreeTreeAllocator::Allocate(const size_t size, const size_t align) {
     if (newSize >= sizeof(TreeNode))
     {
         TreeNode *newNode = new (reinterpret_cast<void*>(alignedAddress + paddedSize)) TreeNode(newSize);
-        InsertNode(newNode);
+        ReplaceNode(allocNode, newNode);
     }
     else
     {
         allocSize += newSize;
+        RemoveNode(allocNode);
     }
 
     // Place allocation header in front of allocated memory section
@@ -199,7 +197,9 @@ void FreeTreeAllocator::InsertNode(TreeNode *newNode) {
 
 void FreeTreeAllocator::RemoveNode(TreeNode *node) {
 
+    // Node from which to start the maxSize update
     TreeNode *sizeUpdateNode = node->parent;
+    
     if (!node->left)
     {
         ShiftNodeUp(node, node->right);
@@ -233,6 +233,33 @@ void FreeTreeAllocator::RemoveNode(TreeNode *node) {
     }
 
     UpdateMaxSize(sizeUpdateNode);
+}
+
+void FreeTreeAllocator::ReplaceNode(TreeNode *target, TreeNode *newNode) {
+
+    if (target == pRoot)
+    {
+        pRoot = newNode;            
+    }
+    else
+    {
+        newNode->parent = target->parent;
+        target == target->parent->left ? target->parent->left = newNode : target->parent->right = newNode;
+    }
+
+    if (target->left)
+    {
+        newNode->left = target->left;
+        newNode->left->parent = newNode;
+    }
+
+    if (target->right)
+    {
+        newNode->right = target->right;
+        newNode->right->parent = newNode;
+    }
+
+    UpdateMaxSize(newNode->parent);
 }
 
 void FreeTreeAllocator::ShiftNodeUp(TreeNode *target, TreeNode *node) {

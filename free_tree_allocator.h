@@ -112,6 +112,13 @@ private:
      */
     void RemoveNode(TreeNode *node);
 
+    /* @brief Replaces a node in teh tree with a new node.
+     *
+     * @param target    Pointer to the node to be replaces.
+     * @param newNode    Pointer to the new node.
+     */
+    void ReplaceNode(TreeNode *target, TreeNode *newNode);
+
     /* @brief Moves a node to replace another node higher up the tree.
      *
      * @param target    Pointer to the node to be replaces.
