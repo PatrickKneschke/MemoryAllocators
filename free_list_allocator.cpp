@@ -1,6 +1,5 @@
 
 #include "free_list_allocator.h"
-#include <stdexcept>
 
 
 FreeListAllocator::FreeListAllocator(const size_t totalMemory, IAllocator *parent) :

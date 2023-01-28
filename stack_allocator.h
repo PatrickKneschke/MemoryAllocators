@@ -18,7 +18,7 @@ public:
 
     StackAllocator() = delete;
 
-    /* @brief Constructor that allocates the managed memory portion.
+    /* @brief Constructor that allocates the managed memory portion and calls Clear() to reset the stack.
      *
      * @param totalMemory    The size of the managed memory space in bytes.
      * @param parent    Optional parent allocator to get memory from.

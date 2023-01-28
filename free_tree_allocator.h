@@ -91,7 +91,7 @@ public:
 
 private:
 
-    /* @brief Finds the smallest free region larger than size bytes.
+    /* @brief Finds the first free region larger than size bytes.
      *
      * @param size    Required size of the free memory region in bytes
      * @param root    Root of the (sub-)tree to search for the memory region
@@ -100,7 +100,7 @@ private:
      */
     TreeNode* FindNode(const size_t size, TreeNode *root);
 
-    /* @brief Inserts a new node into the tree.
+    /* @brief Inserts a new node into the tree as a leaf node.
      *
      * @param newNode    Pointer to the node to insert into the tree.
      */
@@ -122,7 +122,7 @@ private:
     /* @brief Moves a node to replace another node higher up the tree.
      *
      * @param target    Pointer to the node to be replaces.
-     * @param node    Pointer to the node to be oved up.
+     * @param node    Pointer to the node to be moved up.
      */
     void ShiftNodeUp(TreeNode *target, TreeNode *node);
 
@@ -137,6 +137,7 @@ private:
      * @param node    Pointers to the left and right neighbors of the node.
      */
     std::pair<TreeNode*, TreeNode*> FindNeighbors(TreeNode *node);
+
 
     TreeNode* pRoot;
 };

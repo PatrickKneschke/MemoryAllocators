@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <stdexcept>
 #include <cstdint>
 #include <cstdlib>
 
@@ -30,6 +31,8 @@ public:
         mMaxUsedMemory {0},
         pParent {parent}
     {
+        assert(totalMemory > 0);
+        
         if (!pParent)
         {
             pBase = std::malloc(mTotalMemory);

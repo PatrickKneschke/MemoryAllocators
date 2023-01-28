@@ -1,37 +1,7 @@
 
 #include "free_tree_allocator.h"
 #include <stdexcept>
-
-
-// JUST FOR TESTING
-
 #include <iostream>
-
-void FreeTreeAllocator::PrintTree() {
-
-    std::function<void(std::string, TreeNode*, bool)> printTree;
-    printTree = [&printTree](std::string prefix, TreeNode *root, bool isLeft) {
-
-        if (root == nullptr)
-        {
-            return;
-        }
-
-        std::cout << prefix;
-        std::cout << (isLeft ? "├──" : "└──" );
-        std::cout << root->size << ":" << root->maxSize << '\n';
-        
-        printTree(prefix + (isLeft ? "│   " : "    "), root->left, true);
-        printTree(prefix + (isLeft ? "│   " : "    "), root->right, false);
-    
-    };
-
-    printTree("", pRoot, false);
-
-    std::cout << "----------------------------\n";
-}
-
-// JUST FOR TESTING END
 
 
 FreeTreeAllocator::FreeTreeAllocator(const size_t totalMemory, IAllocator *parent) :
@@ -320,4 +290,29 @@ std::pair<FreeTreeAllocator::TreeNode*, FreeTreeAllocator::TreeNode*> FreeTreeAl
     }
 
     return {left, right};
+}
+
+
+void FreeTreeAllocator::PrintTree() {
+
+    std::function<void(std::string, TreeNode*, bool)> printTree;
+    printTree = [&printTree](std::string prefix, TreeNode *root, bool isLeft) {
+
+        if (root == nullptr)
+        {
+            return;
+        }
+
+        std::cout << prefix;
+        std::cout << (isLeft ? "├──" : "└──" );
+        std::cout << root->size << ":" << root->maxSize << '\n';
+        
+        printTree(prefix + (isLeft ? "│   " : "    "), root->left, true);
+        printTree(prefix + (isLeft ? "│   " : "    "), root->right, false);
+    
+    };
+
+    printTree("", pRoot, false);
+
+    std::cout << "----------------------------\n";
 }

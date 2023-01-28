@@ -32,8 +32,6 @@ void benchmarkStack(size_t totalMemory, size_t numOperations) {
     std::cout << seed << '\n';
     srand(seed);
     
-
-    // test stack allocator
     StackAllocator stAlloc(totalMemory);
 
     Clock clock;    
@@ -69,7 +67,6 @@ void benchmarkList(size_t totalMemory, size_t numOperations) {
     std::cout << seed << '\n';
     srand(seed);
 
-    // test stack allocator
     FreeListAllocator listAlloc(totalMemory);
 
     Clock clock;    
@@ -128,7 +125,6 @@ void benchmarkTree(size_t totalMemory, size_t numOperations) {
     std::cout << seed << '\n';
     srand(seed);
 
-    // test stack allocator
     FreeTreeAllocator treeAlloc(totalMemory);
 
     Clock clock;    
@@ -186,7 +182,6 @@ void benchmarkPool(size_t totalMemory, size_t nodeSize, size_t numOperations) {
     std::cout << seed << '\n';
     srand(seed);
 
-    // test stack allocator
     PoolAllocator poolAlloc(totalMemory, nodeSize);
 
     Clock clock;    
@@ -275,10 +270,10 @@ int main(int argc, char *argv[]) {
     uint32_t MB = KB*KB;
 
     benchmarkMalloc(1000000);
-    benchmarkStack(10*MB, 1000000);
+    // benchmarkStack(10*MB, 1000000);
     benchmarkList(10*MB, 1000000);
     benchmarkTree(10*MB, 1000000);
-    benchmarkPool(10*MB, 1*KB, 1000000);
+    // benchmarkPool(10*MB, 1*KB, 1000000);
 
 
     return 0;

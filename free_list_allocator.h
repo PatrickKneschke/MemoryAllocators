@@ -3,8 +3,6 @@
 
 #include "allocator.h"
 
-#include "algorithm"
-
 
 /* @brief Free list implementation of IAllocator.
  * 
